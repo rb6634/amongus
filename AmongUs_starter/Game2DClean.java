@@ -285,4 +285,4 @@ public class Game2DClean extends Application {
       }
    }
 
-} // end class Races
+} // end class Races rinor
