@@ -12,6 +12,8 @@ import javafx.stage.*;
 import javafx.geometry.*;
 import javafx.animation.*;
 import java.io.*;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.*;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyCode;
@@ -32,6 +34,11 @@ public class Game2DClean extends Application {
    private Stage stage;
    private Scene scene;
    private StackPane root;
+   private static final String IP_ADRESS = "127.0.0.1";
+   private static final int SERVER_PORT = 2000;
+   private ObjectOutputStream oos = null;
+   private ObjectInputStream ois = null;
+   private CrewmateRacer onlinePlayer = null;
 
    private static String[] args;
 
@@ -76,6 +83,7 @@ public class Game2DClean extends Application {
 
       // root pane
       root = new StackPane();
+      this.root.setAlignment(Pos.TOP_LEFT);
 
       initializeScene();
 
@@ -84,7 +92,10 @@ public class Game2DClean extends Application {
    // start the game scene
    public void initializeScene() {
 
+      scene = new Scene(root, 800, 500);
+
       masterCrewmate = new CrewmateRacer(true);
+      // onlinePlayer = new CrewmateRacer(false);
       for (int i = 0; i < 5; i++) {
          CrewmateRacer cR = new CrewmateRacer(false);
          robotCrewmates.add(cR);
@@ -92,14 +103,17 @@ public class Game2DClean extends Application {
       // create background
       movableBackground = new MovableBackground();
 
+      movableBackground.setTranslateX(-200);
+      movableBackground.setTranslateY(-200);
+
       // add background
       this.root.getChildren().add(movableBackground);
       // add to the root
       this.root.getChildren().add(masterCrewmate);
-      this.root.getChildren().addAll(robotCrewmates);
+      // this.root.getChildren().addAll(robotCrewmates);
 
       // display the window
-      scene = new Scene(root, 800, 500);
+
       // scene.getStylesheets().addAll(this.getClass().getResource("style.css").toExternalForm());
       stage.setScene(scene);
       stage.show();
@@ -152,16 +166,61 @@ public class Game2DClean extends Application {
       // background collision
       backgroundCollision = new Image(RGB_MAP);// MASK IMAGE
 
+      try {
+         Socket socket = new Socket(IP_ADRESS, SERVER_PORT);
+         oos = new ObjectOutputStream(socket.getOutputStream());
+         ois = new ObjectInputStream(socket.getInputStream());
+         oos.writeObject("getIndex");
+         oos.flush();
+      } catch (UnknownHostException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      } catch (IOException e) {
+         // TODO Auto-generated catch block
+         e.printStackTrace();
+      }
+
       timer = new AnimationTimer() {
          @Override
          public void handle(long now) {
-            masterCrewmate.update();
+            // masterCrewmate.update();
+            // masterCrewmate.update();
 
-            for (int i = 0; i < robotCrewmates.size(); i++) {
-               robotCrewmates.get(i).update();
+            Point2D location = masterCrewmate.update();
+
+            if (moveUP || moveDown || moveLeft || moveRight) {
+               // if (connected) {
+
+               try {
+                  oos.writeObject(new playerLocation((int) location.getX(), (int) location.getY()));
+                  oos.flush();
+                  try {
+                     Object obj = ois.readObject();
+
+                     if (obj instanceof playerLocation) {
+
+                        playerLocation otherPlayerLocation = (playerLocation) obj;
+                        System.out.println(
+
+                              "Other players coords: " + otherPlayerLocation.getX() + " " + otherPlayerLocation.getY());
+                     }
+                  } catch (ClassNotFoundException e) {
+                     // TODO Auto-generated catch block
+                     e.printStackTrace();
+                  } catch (IOException e) {
+                     // TODO Auto-generated catch block
+                     e.printStackTrace();
+                  }
+               } catch (IOException e) {
+                  // TODO Auto-generated catch block
+                  e.printStackTrace();
+               }
+               // }
             }
 
-            movableBackground.update();
+            // for (int i = 0; i < robotCrewmates.size(); i++) {
+            // robotCrewmates.get(i).update();
+            // }
          }
       };
       timer.start();
@@ -169,25 +228,49 @@ public class Game2DClean extends Application {
 
    // inner class
    class CrewmateRacer extends Pane {
+
       private int racerPosX = 0;
       private int racerPosY = 0;
+
+      private int lastRacerPosX = 0;
+      private int lastRacerPosY = 0;
+
+      private int lastBackgroundPosX = 0;
+      private int lastBackgroundPosY = 0;
+
       private ImageView aPicView = null;
       private boolean isMaster = true;
+      private int index;
+
+      public int getIndex() {
+         return index;
+      }
+
+      public void setIndex(int index) {
+         this.index = index;
+      }
 
       public CrewmateRacer(boolean isMaster) {
          this.isMaster = isMaster;
+         Image crewMateImage = new Image(CREWMATE_IMAGE);
          if (isMaster) {
+
             aPicView = new ImageView(CREWMATE_IMAGE);
-            racerPosX = (int) (400 - aPicView.getFitWidth() / 2);
-            aPicView.setTranslateX(racerPosX); // (int)(root.getWidth()/2);
-            racerPosY = (int) (250 - aPicView.getFitHeight() / 2);
-            aPicView.setTranslateY(racerPosY); // (int)(root.getHeight()/2);
+            racerPosX = (int) ((scene.getWidth() / 2) - (crewMateImage.getWidth() / 2));
+            aPicView.setX(racerPosX); // (int)(root.getWidth()/2);
+
+            this.racerPosY = (int) ((scene.getHeight() / 2) - (crewMateImage.getHeight() / 2));
+            aPicView.setY(racerPosY); // (int)(root.getHeight()/2);
+
          } else
             aPicView = new ImageView(CREWMATE_RUNNERS);
+
+         racerPosX += 200;
+         racerPosY += 200;
          this.getChildren().add(aPicView);
       }
 
-      public void update() {
+      public Point2D update() {
 
          // double speed = 10;
 
@@ -231,58 +314,104 @@ public class Game2DClean extends Application {
          // if(racerPosX<0) racerPosX=0;
          // if(racerPosY<0) racerPosY=0;
 
+         movableBackground.update();
+
+         double speed = 10;
+
+         int backgroundPosX = (int) movableBackground.getTranslateX();
+         int backgroundPosY = (int) movableBackground.getTranslateY();
+
+         if (this.checkCollision(racerPosX, racerPosY) ||
+               this.checkCollision(racerPosX + 60, racerPosY) ||
+               this.checkCollision(racerPosX + 60, racerPosY + 130) ||
+               this.checkCollision(racerPosX, racerPosY + 130)) {
+            System.out.println("collesion");
+
+            if (moveDown) {
+               racerPosY -= speed;
+               moveDown = false;
+               backgroundPosY = lastBackgroundPosY;
+
+            } else if (moveUP) {
+               racerPosY += speed;
+               moveUP = false;
+               backgroundPosY = lastBackgroundPosY;
+
+            } else if (moveLeft) {
+               racerPosX += speed;
+               moveLeft = false;
+               backgroundPosX = lastBackgroundPosX;
+
+            } else if (moveRight) {
+               racerPosX -= speed;
+               moveRight = false;
+               backgroundPosX = lastBackgroundPosX;
+
+            }
+
+         } else {
+
+            lastRacerPosX = racerPosX;
+            lastRacerPosY = racerPosY;
+            lastBackgroundPosY = backgroundPosY;
+            lastBackgroundPosX = backgroundPosX;
+
+         }
+
+         if (moveDown) {
+            racerPosY += speed;
+            backgroundPosY -= speed;
+
+         }
+         if (moveUP) {
+            racerPosY -= speed;
+            backgroundPosY += speed;
+
+         }
+         if (moveLeft) {
+            racerPosX -= speed;
+            backgroundPosX += speed;
+
+         }
+         if (moveRight) {
+            racerPosX += speed;
+            backgroundPosX -= speed;
+
+         }
+
+         movableBackground.setTranslateX(backgroundPosX);
+         movableBackground.setTranslateY(backgroundPosY);
+
+         return new Point2D(racerPosX, racerPosY);
       }
+
+      private boolean checkCollision(int x, int y) {
+         Color color = backgroundCollision.getPixelReader().getColor(x,
+               y);
+         return color.getRed() >= 0.8 && color.getGreen() < 0.5;
+      }
+
    }
 
    // background
    class MovableBackground extends Pane {
-      private int racerPosX = 100;
-      private int racerPosY = -100;
-      private int integerPosX = 0;
-      private int integerPosY = 0;
+
+      private int racerPosX = 0;
+      private int racerPosY = 0;
       private ImageView aPicView = null;
       private ImageView map = null;
 
       public MovableBackground() {
+         map = new ImageView(BACKGROUND_IMAGE);
          aPicView = new ImageView(RGB_MAP);
          this.getChildren().add(aPicView);
-         map = new ImageView(BACKGROUND_IMAGE);
          this.getChildren().add(map);
       }
 
-      public void update() {
-         double speed = 10;
-         if (moveDown) 
-            racerPosY -= speed;
-         if (moveUP)
-            racerPosY += speed;
-         if (moveLeft)
-            racerPosX += speed;
-         if (moveRight)
-            racerPosX -= speed;
-         integerPosX = 400 - racerPosX;
-         integerPosY = 250 - racerPosY;
-         Color color = backgroundCollision.getPixelReader().getColor(integerPosX, integerPosY);
-         System.out.println(color.getRed() + " " + color.getGreen() + " " + color.getBlue());
+      public Point2D update() {
 
-         if (color.getGreen() < 0.1) {
-            System.out.println("collesion");
-            if (moveDown)
-               racerPosY += speed;
-            else if (moveUP)
-               racerPosY -= speed;
-            else if (moveLeft)
-               racerPosX -= speed;
-            else if (moveRight)
-               racerPosX += speed;
-
-         }
-
-         aPicView.setTranslateX(racerPosX);
-         aPicView.setTranslateY(racerPosY);
-         map.setTranslateX(racerPosX);
-         map.setTranslateY(racerPosY);
+         return new Point2D(racerPosX, racerPosY);
       }
    }
 
-} // end class Races rinor
+} // end class Races
