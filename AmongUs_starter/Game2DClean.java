@@ -15,7 +15,7 @@ import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.*;
-import javafx.event.EventHandler;
+
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
@@ -29,7 +29,7 @@ import javafx.scene.input.KeyEvent;
  * Collsion between two imposters
  */
 
-public class Game2DClean extends Application {
+public class Game2DClean extends Application implements EventHandler<ActionEvent>{
 
    
 
@@ -55,6 +55,13 @@ public class Game2DClean extends Application {
    private TextField chatInputField;
    private Button sendButton;
    private ListView<String> chatListView;
+   private Button btnTask1 = null;
+   private Button btnTask2 = null;
+   private Button btnTask3 = null;
+   private Button btnTask4 = null;
+   private TextField tfPlayerName;
+   private Button btnLogin = null;
+
 
    // crewmates
    CrewmateRacer masterCrewmate = null;
@@ -93,7 +100,32 @@ public class Game2DClean extends Application {
       root = new StackPane();
       this.root.setAlignment(Pos.TOP_LEFT);
 
-      initializeScene();
+      startingScreen();
+
+      // initializeScene();
+
+   }
+
+   public void startingScreen(){
+      
+      VBox login = new VBox();
+      login.setAlignment(Pos.CENTER);
+      login.setSpacing(10);
+      scene = new Scene(login, 800, 500);
+      tfPlayerName = new TextField();
+      btnLogin = new Button("Log in");
+      login.getChildren().addAll(tfPlayerName, btnLogin);
+      stage.setScene(scene);
+      stage.show();
+      btnLogin.setOnAction(new EventHandler<ActionEvent>() {
+
+         @Override
+         public void handle(ActionEvent event) {
+            // TODO Auto-generated method stub
+            initializeScene();
+         }
+         
+      });
 
    }
 
@@ -129,19 +161,28 @@ public class Game2DClean extends Application {
       chatInputField.setTranslateX(20);
       chatInputField.setTranslateY(430);
 
-      sendButton = new Button("Send");
+      sendButton = new Button("Send Message");
+      btnTask1 = new Button("Task 1");
+      btnTask2 = new Button("Task 2");
+      btnTask3 = new Button("Task 3");
+      btnTask4 = new Button("Click to complete the tasks!");
       sendButton.setTranslateX(330);
       sendButton.setTranslateY(430);
 
+
       // Add chat input field and send button to the root
 
-      this.root.getChildren().addAll(chatInputField, sendButton);
+      this.root.getChildren().addAll(chatInputField, sendButton, btnTask1, btnTask2, btnTask3, btnTask4);
       chatInputField.setVisible(false);
-
+      btnTask1.setOnAction(this);
+      btnTask2.setOnAction(this);
+      btnTask3.setOnAction(this);
+      btnTask4.setOnAction(this);
+      
       // scene.getStylesheets().addAll(this.getClass().getResource("style.css").toExternalForm());
       stage.setScene(scene);
       stage.show();
-
+      
       sendButton.setOnAction(new EventHandler<ActionEvent>() {
          @Override
          public void handle(ActionEvent event) {
@@ -301,7 +342,16 @@ public class Game2DClean extends Application {
                   if (obj instanceof ChatMessage) {
 
                      ChatMessage message = (ChatMessage) obj;
-
+                     Platform.runLater(new Runnable() {
+                        
+                        @Override
+                        public void run() {
+                           Alert alert = new Alert(AlertType.INFORMATION, message.getSender() + ": " + message.getMessage() );
+                           alert.setHeaderText("You got a new chat!");
+                           alert.showAndWait();
+                        }
+                        
+                     });
                      System.out.println(message.getSender() + ": " + message.getMessage());
 
                   }
@@ -309,7 +359,7 @@ public class Game2DClean extends Application {
                   // TODO Auto-generated catch block
                   e.printStackTrace();
                } catch (IOException e) {
-                  // TODO Auto-generated catch block
+                  // TODO Auto-generated catch blom
                   e.printStackTrace();
                }
             }
@@ -505,6 +555,28 @@ public class Game2DClean extends Application {
 
          return new Point2D(racerPosX, racerPosY);
       }
+   }
+
+
+
+   @Override
+   public void handle(ActionEvent event) {
+      Object obj = event.getSource();
+      if (obj instanceof Button) {
+         Button button = (Button) obj ;
+
+         switch (button.getText()) {
+            case "Click to complete the tasks!": 
+               AmongUsTasks amongus = new AmongUsTasks();
+               Stage tasks = new Stage();
+               amongus.start(tasks);
+
+               break;
+         
+            default:
+               break;
+         }
+      }  
    }
 
 } // end class Races

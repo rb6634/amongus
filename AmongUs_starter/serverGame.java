@@ -1,8 +1,3 @@
-/**
-* @author Rinor Bugujevci
-* @version 18/03/2022
-*/
-// This GUI i got from day2!!!!!
 
 import javafx.application.Application;
 import javafx.css.CssMetaData;
@@ -36,7 +31,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
     private ArrayList<playerLocation> playerLocation = new ArrayList<>();
     private TextField tfMsg;
     private Button btnSend;
-
+  
     public static void main(String[] args) {
         // method inside the Application class, it will setup our program as a JavaFX
         // application
@@ -100,7 +95,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
             String messageContent = tfMsg.getText().trim();
             if (!messageContent.isEmpty()) {
                 ChatMessage message = new ChatMessage("Server", messageContent);
-                sendToAllClients(message);
+                sendToAllClients(message , -1);
                 taLog.appendText("Server" + messageContent + "\n");
 
                 tfMsg.clear();
@@ -111,16 +106,19 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
 
     Object obj;
 
-    public void sendToAllClients(ChatMessage message) {
-        for (ObjectOutputStream objectOutputStream : outputstream) {
-            try {
-                objectOutputStream.writeObject(message);
-                objectOutputStream.flush();
-            } catch (IOException ioe) {
-                // TODO: handle exception
-                ioe.printStackTrace();
+    public void sendToAllClients(ChatMessage message, int index) {
+        for(int i=0; i<outputstream.size(); i++){
+            if (i!=index) {
+                try {
+                    outputstream.get(i).writeObject(message);
+                    outputstream.get(i).flush();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
         }
+        
     }
 
     // server class
@@ -165,7 +163,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                         ChatMessage message = (ChatMessage) obj;
 
                         log(message.getSender() + ": " + message.getMessage());
-                        sendToAllClients(message);
+                        sendToAllClients(message, -1);
                     } else if (obj instanceof String) {
 
                     }
@@ -228,7 +226,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                     } else if (obj instanceof ChatMessage) {
                         ChatMessage message = (ChatMessage) obj;
                         log(message.getSender() + message.getMessage());
-                        sendToAllClients(message);
+                        sendToAllClients(message, index);
                     }
                 } catch (ClassNotFoundException e) {
                     // TODO Auto-generated catch block

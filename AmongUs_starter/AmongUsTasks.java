@@ -1,7 +1,4 @@
 
-/**
- * @author: Uejsi Hamja
- */
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import javafx.application.Application;
@@ -52,6 +49,9 @@ public class AmongUsTasks extends Application {
         Scene scene = new Scene(root, 400, 300);
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        /////////
+        
     }
 
     private void fixWires(Stage primaryStage) {
@@ -198,4 +198,6 @@ public class AmongUsTasks extends Application {
         alerStage.setScene(new Scene(root,300,200));
         alerStage.show();
     }
+
+
 }
