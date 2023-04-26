@@ -30,6 +30,9 @@ import javafx.scene.input.KeyEvent;
  */
 
 public class Game2DClean extends Application {
+
+   
+
    // Window attributes
    private Stage stage;
    private Scene scene;
@@ -39,6 +42,7 @@ public class Game2DClean extends Application {
    private ObjectOutputStream oos = null;
    private ObjectInputStream ois = null;
    private CrewmateRacer onlinePlayer = null;
+   private boolean connected = false;
 
    private static String[] args;
 
@@ -47,6 +51,10 @@ public class Game2DClean extends Application {
    private final static String BACKGROUND_IMAGE = "fullmap.png";
    //
    private final static String RGB_MAP = "mapcolor.png"; // rgb based map that we will use for collision
+
+   private TextField chatInputField;
+   private Button sendButton;
+   private ListView<String> chatListView;
 
    // crewmates
    CrewmateRacer masterCrewmate = null;
@@ -113,10 +121,78 @@ public class Game2DClean extends Application {
       // this.root.getChildren().addAll(robotCrewmates);
 
       // display the window
+      // Add chat input field and send button
+      chatInputField = new TextField();
+      chatInputField.setPromptText("Type your message...");
+      chatInputField.setPrefWidth(100);
+      chatInputField.setPrefHeight(100);
+      chatInputField.setTranslateX(20);
+      chatInputField.setTranslateY(430);
+
+      sendButton = new Button("Send");
+      sendButton.setTranslateX(330);
+      sendButton.setTranslateY(430);
+
+      // Add chat input field and send button to the root
+
+      this.root.getChildren().addAll(chatInputField, sendButton);
+      chatInputField.setVisible(false);
 
       // scene.getStylesheets().addAll(this.getClass().getResource("style.css").toExternalForm());
       stage.setScene(scene);
       stage.show();
+
+      sendButton.setOnAction(new EventHandler<ActionEvent>() {
+         @Override
+         public void handle(ActionEvent event) {
+            if (chatInputField.isVisible()) {
+               sendChatMessage();
+               chatInputField.setVisible(false);
+            } else
+               chatInputField.setVisible(true);
+
+         }
+
+         private void sendChatMessage() {
+            try {
+               oos.writeObject(new ChatMessage("Client 1", chatInputField.getText()));
+               oos.flush();
+            } catch (IOException e) {
+               // TODO Auto-generated catch block
+               e.printStackTrace();
+            }
+         }
+      });
+
+      // chatInputField.setOnKeyPressed(new EventHandler<KeyEvent>() {
+      // @Override
+      // public void handle(KeyEvent event) {
+      // if (event.getCode() == KeyCode.ENTER) {
+      // sendChatMessage();
+      // }
+      // }
+
+      // private void sendChatMessage() {
+      // }
+      // });
+
+      // chatInputField.setOnKeyPressed(new EventHandler<KeyEvent>() {
+      // @Override
+      // public void handle(KeyEvent event) {
+      // if (event.getCode() == KeyCode.ENTER) {
+      // sendChatMessage();
+      // }
+      // }
+
+      // private void sendChatMessage() {
+      // try {
+      // oos.writeUTF(chatInputField.getText());
+      // } catch (IOException e) {
+      // // TODO Auto-generated catch block
+      // e.printStackTrace();
+      // }
+      // }
+      // });
 
       // KEYBOARD CONTROL
       scene.setOnKeyPressed(
@@ -170,60 +246,79 @@ public class Game2DClean extends Application {
          Socket socket = new Socket(IP_ADRESS, SERVER_PORT);
          oos = new ObjectOutputStream(socket.getOutputStream());
          ois = new ObjectInputStream(socket.getInputStream());
+         connected = true;
          oos.writeObject("getIndex");
          oos.flush();
       } catch (UnknownHostException e) {
-         // TODO Auto-generated catch block
+         connected = false;
          e.printStackTrace();
       } catch (IOException e) {
-         // TODO Auto-generated catch block
+         connected = false;
          e.printStackTrace();
       }
 
       timer = new AnimationTimer() {
          @Override
          public void handle(long now) {
-            // masterCrewmate.update();
-            // masterCrewmate.update();
 
             Point2D location = masterCrewmate.update();
 
-            if (moveUP || moveDown || moveLeft || moveRight) {
-               // if (connected) {
+            if (connected) {
 
                try {
                   oos.writeObject(new playerLocation((int) location.getX(), (int) location.getY()));
                   oos.flush();
-                  try {
-                     Object obj = ois.readObject();
 
-                     if (obj instanceof playerLocation) {
-
-                        playerLocation otherPlayerLocation = (playerLocation) obj;
-                        System.out.println(
-
-                              "Other players coords: " + otherPlayerLocation.getX() + " " + otherPlayerLocation.getY());
-                     }
-                  } catch (ClassNotFoundException e) {
-                     // TODO Auto-generated catch block
-                     e.printStackTrace();
-                  } catch (IOException e) {
-                     // TODO Auto-generated catch block
-                     e.printStackTrace();
-                  }
                } catch (IOException e) {
                   // TODO Auto-generated catch block
                   e.printStackTrace();
                }
-               // }
             }
 
-            // for (int i = 0; i < robotCrewmates.size(); i++) {
-            // robotCrewmates.get(i).update();
-            // }
          }
+
       };
       timer.start();
+
+      Thread serverRecieveThread = new Thread() {
+
+         @Override
+         public void run() {
+
+            while (true) {
+
+               try {
+                  Object obj = ois.readObject();
+
+                  if (obj instanceof playerLocation) {
+
+                     playerLocation otherPlayerLocation = (playerLocation) obj;
+                     System.out.println(
+
+                           "Other players coords: " + otherPlayerLocation.getX() + " "
+                                 + otherPlayerLocation.getY());
+                  }
+                  if (obj instanceof ChatMessage) {
+
+                     ChatMessage message = (ChatMessage) obj;
+
+                     System.out.println(message.getSender() + ": " + message.getMessage());
+
+                  }
+               } catch (ClassNotFoundException e) {
+                  // TODO Auto-generated catch block
+                  e.printStackTrace();
+               } catch (IOException e) {
+                  // TODO Auto-generated catch block
+                  e.printStackTrace();
+               }
+            }
+         }
+
+      };
+
+      serverRecieveThread.start();
+
    }
 
    // inner class
@@ -321,36 +416,34 @@ public class Game2DClean extends Application {
          int backgroundPosX = (int) movableBackground.getTranslateX();
          int backgroundPosY = (int) movableBackground.getTranslateY();
 
-         if (this.checkCollision(racerPosX, racerPosY) ||
-               this.checkCollision(racerPosX + 60, racerPosY) ||
-               this.checkCollision(racerPosX + 60, racerPosY + 130) ||
-               this.checkCollision(racerPosX, racerPosY + 130)) {
-            System.out.println("collesion");
+         // if (this.checkCollision(racerPosX, racerPosY) ||
+         // this.checkCollision(racerPosX + 60, racerPosY) ||
+         // this.checkCollision(racerPosX + 60, racerPosY + 130) ||
+         // this.checkCollision(racerPosX, racerPosY + 130)) {
 
-            if (moveDown) {
-               racerPosY -= speed;
-               moveDown = false;
-               backgroundPosY = lastBackgroundPosY;
+         if (moveDown && this.checkCollision(racerPosX + 60, racerPosY + 130)) {
+            racerPosY -= speed;
+            moveDown = false;
+            backgroundPosY = lastBackgroundPosY;
 
-            } else if (moveUP) {
-               racerPosY += speed;
-               moveUP = false;
-               backgroundPosY = lastBackgroundPosY;
+         } else if (moveUP && this.checkCollision(racerPosX, racerPosY)) {
+            racerPosY += speed;
+            moveUP = false;
+            backgroundPosY = lastBackgroundPosY;
 
-            } else if (moveLeft) {
-               racerPosX += speed;
-               moveLeft = false;
-               backgroundPosX = lastBackgroundPosX;
+         } else if (moveLeft && this.checkCollision(racerPosX, racerPosY)) {
+            racerPosX += speed;
+            moveLeft = false;
+            backgroundPosX = lastBackgroundPosX;
 
-            } else if (moveRight) {
-               racerPosX -= speed;
-               moveRight = false;
-               backgroundPosX = lastBackgroundPosX;
+         } else if (moveRight && this.checkCollision(racerPosX + 60, racerPosY)) {
+            racerPosX -= speed;
+            moveRight = false;
+            backgroundPosX = lastBackgroundPosX;
 
-            }
+            // }
 
          } else {
-
             lastRacerPosX = racerPosX;
             lastRacerPosY = racerPosY;
             lastBackgroundPosY = backgroundPosY;

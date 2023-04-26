@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import javax.swing.plaf.synth.SynthOptionPaneUI;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 
 //copied from LAB6
 public class serverGame extends Application implements EventHandler<ActionEvent> {
@@ -32,6 +34,8 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
     private int clientNo = 0;
     private ArrayList<ObjectOutputStream> outputstream = new ArrayList<>();
     private ArrayList<playerLocation> playerLocation = new ArrayList<>();
+    private TextField tfMsg;
+    private Button btnSend;
 
     public static void main(String[] args) {
         // method inside the Application class, it will setup our program as a JavaFX
@@ -45,7 +49,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
 
         ///////////////////////// Setting window properties
         // set the window title
-        _stage.setTitle("Remote File Server (Bugujevci)");
+        _stage.setTitle("Remote File Server (AmongUs)");
 
         // HBox root layout with 8 pixels spacing
         VBox root = new VBox(8);
@@ -56,8 +60,13 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
         // create a scene with a specific size (width, height), connnect with the layout
         Scene scene = new Scene(root, 600, 300);
         taLog = new TextArea();
-        root.getChildren().addAll(fpane, taLog);
+        // root.getChildren().addAll(fpane, taLog);
         btnStart.setOnAction(this);
+        tfMsg = new TextField();
+        btnSend = new Button("Send");
+        HBox chatBox = new HBox(8, tfMsg, btnSend);
+        root.getChildren().addAll(fpane, taLog, chatBox);
+        btnSend.setOnAction(this);
         // connect stage with the Scene and show it, finalization
         _stage.setX(800);
         _stage.setY(100);
@@ -87,14 +96,43 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                 System.out.println("Server stoped");
                 break;
         }
+        if (event.getSource() == btnSend) {
+            String messageContent = tfMsg.getText().trim();
+            if (!messageContent.isEmpty()) {
+                ChatMessage message = new ChatMessage("Server", messageContent);
+                sendToAllClients(message);
+                taLog.appendText("Server" + messageContent + "\n");
+
+                tfMsg.clear();
+
+            }
+        }
+    }
+
+    Object obj;
+
+    public void sendToAllClients(ChatMessage message) {
+        for (ObjectOutputStream objectOutputStream : outputstream) {
+            try {
+                objectOutputStream.writeObject(message);
+                objectOutputStream.flush();
+            } catch (IOException ioe) {
+                // TODO: handle exception
+                ioe.printStackTrace();
+            }
+        }
     }
 
     // server class
     class MyServer extends Thread {
         private ServerSocket sSocket = null;
         private Socket cSocket = null;
+        String client;
+        Object oos;
 
         // run method
+        ObjectInputStream ois;
+
         public void run() {
             try {
                 if (isStarted == false) {
@@ -118,7 +156,30 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                     e.printStackTrace();
                 }
             }
+            while (true) {
+                try {
+                    Object obj = ois.readObject();
+                    if (obj instanceof playerLocation) {
+
+                    } else if (obj instanceof ChatMessage) {
+                        ChatMessage message = (ChatMessage) obj;
+
+                        log(message.getSender() + ": " + message.getMessage());
+                        sendToAllClients(message);
+                    } else if (obj instanceof String) {
+
+                    }
+                } catch (Exception e) {
+                    // TODO: handle exception
+                    e.printStackTrace();
+                }
+            }
         }
+
+        private void log(String string) {
+
+        }
+
     }
 
     // client class
@@ -142,7 +203,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                 oos = new ObjectOutputStream(this.socket.getOutputStream());
                 ois = new ObjectInputStream(this.socket.getInputStream());
                 outputstream.add(oos);
-                playerLocation.add(new playerLocation(100, -100, client, index));
+                playerLocation.add(new playerLocation(100, 50, client, index));
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -158,7 +219,16 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                         System.out.println(client + " " + "x" + location.getX() + "+" + "y" + location.getY());
                         this.sendToOtherClients(oos, playerLocation);
                     } else if (obj instanceof String) {
+                        System.out.println(obj);
+                        log((String) obj);
 
+                        // send to all other clients
+                        this.sendToOtherClients(oos, obj);
+
+                    } else if (obj instanceof ChatMessage) {
+                        ChatMessage message = (ChatMessage) obj;
+                        log(message.getSender() + message.getMessage());
+                        sendToAllClients(message);
                     }
                 } catch (ClassNotFoundException e) {
                     // TODO Auto-generated catch block
@@ -186,6 +256,8 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
         public void log(String string) {
             taLog.appendText(string);
             taLog.appendText("\n");
+
         }
     }
+
 }
