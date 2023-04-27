@@ -31,7 +31,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
     private ArrayList<playerLocation> playerLocation = new ArrayList<>();
     private TextField tfMsg;
     private Button btnSend;
-  
+
     public static void main(String[] args) {
         // method inside the Application class, it will setup our program as a JavaFX
         // application
@@ -95,7 +95,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
             String messageContent = tfMsg.getText().trim();
             if (!messageContent.isEmpty()) {
                 ChatMessage message = new ChatMessage("Server", messageContent);
-                sendToAllClients(message , -1);
+                sendToAllClients(message, -1);
                 taLog.appendText("Server" + messageContent + "\n");
 
                 tfMsg.clear();
@@ -107,8 +107,8 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
     Object obj;
 
     public void sendToAllClients(ChatMessage message, int index) {
-        for(int i=0; i<outputstream.size(); i++){
-            if (i!=index) {
+        for (int i = 0; i < outputstream.size(); i++) {
+            if (i != index) {
                 try {
                     outputstream.get(i).writeObject(message);
                     outputstream.get(i).flush();
@@ -118,7 +118,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                 }
             }
         }
-        
+
     }
 
     // server class
@@ -149,6 +149,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                     MyClient mc = new MyClient(cSocket, clientNo);
                     mc.start();
                     clientNo++;
+
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -158,7 +159,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                 try {
                     Object obj = ois.readObject();
                     if (obj instanceof playerLocation) {
-
+                        // empty
                     } else if (obj instanceof ChatMessage) {
                         ChatMessage message = (ChatMessage) obj;
 
@@ -201,7 +202,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                 oos = new ObjectOutputStream(this.socket.getOutputStream());
                 ois = new ObjectInputStream(this.socket.getInputStream());
                 outputstream.add(oos);
-                playerLocation.add(new playerLocation(100, 50, client, index));
+                playerLocation.add(new playerLocation(100, 50, client, this.index));
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -211,11 +212,12 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
                     Object obj = ois.readObject();
                     if (obj instanceof playerLocation) {
                         playerLocation location = (playerLocation) obj;
-                        playerLocation.get(index).setX((int) location.getX());
+                        playerLocation.get(this.index).setX((int) location.getX());
 
-                        playerLocation.get(index).setY((int) location.getY());
-                        System.out.println(client + " " + "x" + location.getX() + "+" + "y" + location.getY());
-                        this.sendToOtherClients(oos, playerLocation);
+                        playerLocation.get(this.index).setY((int) location.getY());
+                        // System.out.println(client + " " + "x" + location.getX() + "+" + "y" +
+                        // location.getY());
+                        this.sendToOtherClients(oos, obj);
                     } else if (obj instanceof String) {
                         System.out.println(obj);
                         log((String) obj);
@@ -225,7 +227,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
 
                     } else if (obj instanceof ChatMessage) {
                         ChatMessage message = (ChatMessage) obj;
-                        log(message.getSender() + message.getMessage());
+                        log(message.getSender() + " : " + message.getMessage());
                         sendToAllClients(message, index);
                     }
                 } catch (ClassNotFoundException e) {
@@ -244,10 +246,25 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
         private void sendToOtherClients(ObjectOutputStream oos, Object obj) throws IOException {
             for (ObjectOutputStream objectOutputStream : outputstream) {
                 if (objectOutputStream != oos) {
+                    System.out.println("Sent!");
+                    for (int index = 0; index < playerLocation.size(); index++) {
+                        System.out.println(playerLocation.get(index).getIndex());
+
+                    }
                     oos.writeObject(obj);
                     oos.flush();
+                    oos.reset();
                 }
             }
+        }
+
+        public void sendToAllLocation() {
+
+            // i need to send the index to the client
+            // when i recreivit i need to update the amongus player
+            // who move for that moment to move to the screen for everyone
+            // duhet mi bo uodate ati lojtari qe ja kam marr index
+
         }
 
         // log method to display in the gui

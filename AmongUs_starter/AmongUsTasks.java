@@ -51,7 +51,7 @@ public class AmongUsTasks extends Application {
         primaryStage.show();
 
         /////////
-        
+
     }
 
     private void fixWires(Stage primaryStage) {
@@ -87,7 +87,8 @@ public class AmongUsTasks extends Application {
     }
 
     private void alignEngines(Stage primaryStage) {
-        Label instructionLabel = new Label("Align the engines by setting the slider to the correct value: (It's not 50 :) )");
+        Label instructionLabel = new Label(
+                "Align the engines by setting the slider to the correct value: (It's not 50 :) )");
 
         Slider slider = new Slider(0, 100, 0);
         slider.setMajorTickUnit(10);
@@ -103,7 +104,7 @@ public class AmongUsTasks extends Application {
                 alignEnginesTaskCompleted = true;
                 checkTasksCompleted(primaryStage);
             } else {
-                 showAlert("Incorrect slider value. Try again.");
+                showAlert("Incorrect slider value. Try again.");
             }
         });
 
@@ -114,7 +115,7 @@ public class AmongUsTasks extends Application {
         primaryStage.setScene(new Scene(root, 400, 300));
     }
 
-    private void sortSamples(Stage primaryStage){
+    private void sortSamples(Stage primaryStage) {
         Label instructionLabel = new Label("Sort the samples into the correct categories:");
         Label lblSample = new Label();
 
@@ -161,7 +162,7 @@ public class AmongUsTasks extends Application {
         root.setAlignment(Pos.CENTER);
         root.setSpacing(15);
 
-        primaryStage.setScene(new Scene(root,400, 300));
+        primaryStage.setScene(new Scene(root, 400, 300));
     }
 
     private void checkTasksCompleted(Stage primaryStage) {
@@ -182,8 +183,8 @@ public class AmongUsTasks extends Application {
         }
     }
 
-    //show alert method
-    private void showAlert(String message){
+    // show alert method
+    private void showAlert(String message) {
         Stage alerStage = new Stage();
         alerStage.setTitle("Alert");
 
@@ -191,13 +192,12 @@ public class AmongUsTasks extends Application {
         Button btnClose = new Button("Close");
         btnClose.setOnAction(e -> alerStage.close());
 
-        VBox root = new VBox(lblAlert,btnClose);
+        VBox root = new VBox(lblAlert, btnClose);
         root.setAlignment(Pos.CENTER);
         root.setSpacing(15);
 
-        alerStage.setScene(new Scene(root,300,200));
+        alerStage.setScene(new Scene(root, 300, 200));
         alerStage.show();
     }
-
 
 }

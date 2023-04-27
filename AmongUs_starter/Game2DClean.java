@@ -6,7 +6,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert.*;
 import javafx.scene.text.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.stage.*;
 import javafx.geometry.*;
@@ -29,13 +28,11 @@ import javafx.scene.input.KeyEvent;
  * Collsion between two imposters
  */
 
-public class Game2DClean extends Application implements EventHandler<ActionEvent>{
-
-   
+public class Game2DClean extends Application implements EventHandler<ActionEvent> {
 
    // Window attributes
    private Stage stage;
-   private Scene scene;
+   Scene scene;
    private StackPane root;
    private static final String IP_ADRESS = "127.0.0.1";
    private static final int SERVER_PORT = 2000;
@@ -46,11 +43,11 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
 
    private static String[] args;
 
-   private final static String CREWMATE_IMAGE = "ply1.png"; // file with icon for a racer
-   private final static String CREWMATE_RUNNERS = "runner1.png"; // file with icon for a racer
-   private final static String BACKGROUND_IMAGE = "fullmap.png";
+   final static String CREWMATE_IMAGE = "ply1.png"; // file with icon for a racer
+   final static String CREWMATE_RUNNERS = "runner1.png"; // file with icon for a racer
+   final static String BACKGROUND_IMAGE = "fullmap.png";
    //
-   private final static String RGB_MAP = "mapcolor.png"; // rgb based map that we will use for collision
+   final static String RGB_MAP = "mapcolor.png"; // rgb based map that we will use for collision
 
    private TextField chatInputField;
    private Button sendButton;
@@ -62,10 +59,9 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
    private TextField tfPlayerName;
    private Button btnLogin = null;
 
-
    // crewmates
    CrewmateRacer masterCrewmate = null;
-   ArrayList<CrewmateRacer> robotCrewmates = new ArrayList<>();
+   List<CrewmateRacer> robotCrewmates = new ArrayList<>();
 
    // movable background
    MovableBackground movableBackground = null;
@@ -77,6 +73,8 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
 
    // background detection/collision
    Image backgroundCollision = null;
+
+   protected String name;
 
    // main program
    public static void main(String[] _args) {
@@ -106,8 +104,8 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
 
    }
 
-   public void startingScreen(){
-      
+   public void startingScreen() {
+
       VBox login = new VBox();
       login.setAlignment(Pos.CENTER);
       login.setSpacing(10);
@@ -122,9 +120,10 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
          @Override
          public void handle(ActionEvent event) {
             // TODO Auto-generated method stub
+            name = tfPlayerName.getText();
             initializeScene();
          }
-         
+
       });
 
    }
@@ -134,12 +133,8 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
 
       scene = new Scene(root, 800, 500);
 
-      masterCrewmate = new CrewmateRacer(true);
+      masterCrewmate = new CrewmateRacer(this, true);
       // onlinePlayer = new CrewmateRacer(false);
-      for (int i = 0; i < 5; i++) {
-         CrewmateRacer cR = new CrewmateRacer(false);
-         robotCrewmates.add(cR);
-      }
       // create background
       movableBackground = new MovableBackground();
 
@@ -148,6 +143,11 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
 
       // add background
       this.root.getChildren().add(movableBackground);
+      for (int i = 0; i < 5; i++) {
+         CrewmateRacer cR = new CrewmateRacer(this, false);
+         robotCrewmates.add(cR);
+         this.root.getChildren().addAll((cR));
+      }
       // add to the root
       this.root.getChildren().add(masterCrewmate);
       // this.root.getChildren().addAll(robotCrewmates);
@@ -169,7 +169,6 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
       sendButton.setTranslateX(330);
       sendButton.setTranslateY(430);
 
-
       // Add chat input field and send button to the root
 
       this.root.getChildren().addAll(chatInputField, sendButton, btnTask1, btnTask2, btnTask3, btnTask4);
@@ -178,11 +177,11 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
       btnTask2.setOnAction(this);
       btnTask3.setOnAction(this);
       btnTask4.setOnAction(this);
-      
+
       // scene.getStylesheets().addAll(this.getClass().getResource("style.css").toExternalForm());
       stage.setScene(scene);
       stage.show();
-      
+
       sendButton.setOnAction(new EventHandler<ActionEvent>() {
          @Override
          public void handle(ActionEvent event) {
@@ -196,7 +195,7 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
 
          private void sendChatMessage() {
             try {
-               oos.writeObject(new ChatMessage("Client 1", chatInputField.getText()));
+               oos.writeObject(new ChatMessage(name, chatInputField.getText()));
                oos.flush();
             } catch (IOException e) {
                // TODO Auto-generated catch block
@@ -288,7 +287,7 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
          oos = new ObjectOutputStream(socket.getOutputStream());
          ois = new ObjectInputStream(socket.getInputStream());
          connected = true;
-         oos.writeObject("getIndex");
+         oos.writeObject("getindex");
          oos.flush();
       } catch (UnknownHostException e) {
          connected = false;
@@ -321,6 +320,13 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
       };
       timer.start();
 
+      ////
+      ////////
+      Game2DClean game = this;
+      ////
+      ////
+      ////
+
       Thread serverRecieveThread = new Thread() {
 
          @Override
@@ -334,23 +340,45 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
                   if (obj instanceof playerLocation) {
 
                      playerLocation otherPlayerLocation = (playerLocation) obj;
-                     System.out.println(
+                     System.out.println("Other players coords: " + otherPlayerLocation.getX() + " "
+                           + otherPlayerLocation.getY());
 
-                           "Other players coords: " + otherPlayerLocation.getX() + " "
-                                 + otherPlayerLocation.getY());
+                     //////
+                     /////
+                     /////
+                     ////
+                     try {
+
+                        // otherPlayerLocation getIndex() is always zero?????
+                        CrewmateRacer racer = robotCrewmates.get(1);
+                        racer.getaPicView().setTranslateX(otherPlayerLocation.getX());
+                        racer.getaPicView().setTranslateY(otherPlayerLocation.getY());
+
+                        System.out.println("Other index: " + otherPlayerLocation.getIndex());
+
+                        racer.setTranslateX(otherPlayerLocation.getX());
+                        racer.setTranslateY(otherPlayerLocation.getY());
+
+                     } catch (Exception e) {
+                        CrewmateRacer racer2 = new CrewmateRacer(game, otherPlayerLocation.getX(),
+                              otherPlayerLocation.getY());
+                        robotCrewmates.add(racer2);
+                     }
+
                   }
                   if (obj instanceof ChatMessage) {
 
                      ChatMessage message = (ChatMessage) obj;
                      Platform.runLater(new Runnable() {
-                        
+
                         @Override
                         public void run() {
-                           Alert alert = new Alert(AlertType.INFORMATION, message.getSender() + ": " + message.getMessage() );
+                           Alert alert = new Alert(AlertType.INFORMATION,
+                                 message.getSender() + ": " + message.getMessage());
                            alert.setHeaderText("You got a new chat!");
                            alert.showAndWait();
                         }
-                        
+
                      });
                      System.out.println(message.getSender() + ": " + message.getMessage());
 
@@ -371,212 +399,24 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
 
    }
 
-   // inner class
-   class CrewmateRacer extends Pane {
-
-      private int racerPosX = 0;
-      private int racerPosY = 0;
-
-      private int lastRacerPosX = 0;
-      private int lastRacerPosY = 0;
-
-      private int lastBackgroundPosX = 0;
-      private int lastBackgroundPosY = 0;
-
-      private ImageView aPicView = null;
-      private boolean isMaster = true;
-      private int index;
-
-      public int getIndex() {
-         return index;
-      }
-
-      public void setIndex(int index) {
-         this.index = index;
-      }
-
-      public CrewmateRacer(boolean isMaster) {
-         this.isMaster = isMaster;
-         Image crewMateImage = new Image(CREWMATE_IMAGE);
-         if (isMaster) {
-
-            aPicView = new ImageView(CREWMATE_IMAGE);
-            racerPosX = (int) ((scene.getWidth() / 2) - (crewMateImage.getWidth() / 2));
-            aPicView.setX(racerPosX); // (int)(root.getWidth()/2);
-
-            this.racerPosY = (int) ((scene.getHeight() / 2) - (crewMateImage.getHeight() / 2));
-            aPicView.setY(racerPosY); // (int)(root.getHeight()/2);
-
-         } else
-            aPicView = new ImageView(CREWMATE_RUNNERS);
-
-         racerPosX += 200;
-         racerPosY += 200;
-         this.getChildren().add(aPicView);
-      }
-
-      public Point2D update() {
-
-         // double speed = 10;
-
-         // if(isMaster){//MASTER CONTROL
-
-         // //get pixel
-
-         // Color color = backgroundCollision.getPixelReader().getColor(racerPosX,
-         // racerPosY);
-         // //System.out.println(color.getRed() + " " + color.getGreen() + " " +
-         // color.getBlue());
-
-         // //get distance
-         // int targetX=0;
-         // int targetY = 0;
-
-         // double dist = Math.sqrt( Math.pow(racerPosX-targetX,2)
-         // + Math.pow(racerPosY-targetY,2));
-         // System.out.println(dist);
-
-         // if(color.getRed()>0.6){
-         // speed=10;
-         // }
-         // else speed=2;
-
-         // if(moveDown) racerPosY+=speed;
-         // if(moveUP) racerPosY-=speed;
-         // if(moveLeft) racerPosX-=speed;
-         // if(moveRight) racerPosX+=speed;
-         // }
-         // else{//ALL THE OTHERS
-         // racerPosX += Math.random()*speed;
-         // racerPosY += (Math.random()-0.2)*speed;
-         // }
-
-         // // aPicView.setTranslateX(racerPosX);
-         // // aPicView.setTranslateY(racerPosY);
-
-         // if(racerPosX>root.getWidth()) racerPosX=0;
-         // if(racerPosY>root.getHeight()) racerPosY=0;
-         // if(racerPosX<0) racerPosX=0;
-         // if(racerPosY<0) racerPosY=0;
-
-         movableBackground.update();
-
-         double speed = 10;
-
-         int backgroundPosX = (int) movableBackground.getTranslateX();
-         int backgroundPosY = (int) movableBackground.getTranslateY();
-
-         // if (this.checkCollision(racerPosX, racerPosY) ||
-         // this.checkCollision(racerPosX + 60, racerPosY) ||
-         // this.checkCollision(racerPosX + 60, racerPosY + 130) ||
-         // this.checkCollision(racerPosX, racerPosY + 130)) {
-
-         if (moveDown && this.checkCollision(racerPosX + 60, racerPosY + 130)) {
-            racerPosY -= speed;
-            moveDown = false;
-            backgroundPosY = lastBackgroundPosY;
-
-         } else if (moveUP && this.checkCollision(racerPosX, racerPosY)) {
-            racerPosY += speed;
-            moveUP = false;
-            backgroundPosY = lastBackgroundPosY;
-
-         } else if (moveLeft && this.checkCollision(racerPosX, racerPosY)) {
-            racerPosX += speed;
-            moveLeft = false;
-            backgroundPosX = lastBackgroundPosX;
-
-         } else if (moveRight && this.checkCollision(racerPosX + 60, racerPosY)) {
-            racerPosX -= speed;
-            moveRight = false;
-            backgroundPosX = lastBackgroundPosX;
-
-            // }
-
-         } else {
-            lastRacerPosX = racerPosX;
-            lastRacerPosY = racerPosY;
-            lastBackgroundPosY = backgroundPosY;
-            lastBackgroundPosX = backgroundPosX;
-
-         }
-
-         if (moveDown) {
-            racerPosY += speed;
-            backgroundPosY -= speed;
-
-         }
-         if (moveUP) {
-            racerPosY -= speed;
-            backgroundPosY += speed;
-
-         }
-         if (moveLeft) {
-            racerPosX -= speed;
-            backgroundPosX += speed;
-
-         }
-         if (moveRight) {
-            racerPosX += speed;
-            backgroundPosX -= speed;
-
-         }
-
-         movableBackground.setTranslateX(backgroundPosX);
-         movableBackground.setTranslateY(backgroundPosY);
-
-         return new Point2D(racerPosX, racerPosY);
-      }
-
-      private boolean checkCollision(int x, int y) {
-         Color color = backgroundCollision.getPixelReader().getColor(x,
-               y);
-         return color.getRed() >= 0.8 && color.getGreen() < 0.5;
-      }
-
-   }
-
-   // background
-   class MovableBackground extends Pane {
-
-      private int racerPosX = 0;
-      private int racerPosY = 0;
-      private ImageView aPicView = null;
-      private ImageView map = null;
-
-      public MovableBackground() {
-         map = new ImageView(BACKGROUND_IMAGE);
-         aPicView = new ImageView(RGB_MAP);
-         this.getChildren().add(aPicView);
-         this.getChildren().add(map);
-      }
-
-      public Point2D update() {
-
-         return new Point2D(racerPosX, racerPosY);
-      }
-   }
-
-
-
    @Override
    public void handle(ActionEvent event) {
       Object obj = event.getSource();
       if (obj instanceof Button) {
-         Button button = (Button) obj ;
+         Button button = (Button) obj;
 
          switch (button.getText()) {
-            case "Click to complete the tasks!": 
+            case "Click to complete the tasks!":
                AmongUsTasks amongus = new AmongUsTasks();
                Stage tasks = new Stage();
                amongus.start(tasks);
 
                break;
-         
+
             default:
                break;
          }
-      }  
+      }
    }
 
 } // end class Races
