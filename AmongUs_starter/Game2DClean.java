@@ -58,6 +58,7 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
    private Button btnTask4 = null;
    private TextField tfPlayerName;
    private Button btnLogin = null;
+   private Label lblName = null;
 
    // crewmates
    CrewmateRacer masterCrewmate = null;
@@ -98,23 +99,102 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
       root = new StackPane();
       this.root.setAlignment(Pos.TOP_LEFT);
 
-      startingScreen();
+      // showing instruction before starting the game
+      showInstructions();
+
+      // startingScreen();
 
       // initializeScene();
 
    }
 
+   // Instruction Window
+   public void showInstructions() {
+      Stage instructionStage = new Stage();
+      VBox instructionBox = new VBox();
+      instructionBox.setAlignment(Pos.CENTER);
+      instructionBox.setSpacing(10);
+      //
+      /*
+       * Label instructionLabel = new Label("How To Play");
+       * instructionLabel.setFont(Font.font("Arlia", FontWeight.BOLD, 20));
+       * instructionLabel.setPadding(new Insets(10, 0, 10, 0));
+       * //
+       * TextArea instructionText = new TextArea("Welcome to the Among Us game!\n\n"
+       * +
+       * "The objective of the game is to complete all the tasks without being killed by the imposters.\n\n"
+       * + "Use the arrow keys to move your character around the map.\n\n"
+       * +
+       * "You can communicate with other players by typing in the chat box and pressing the 'Send Message' button.\n\n"
+       * + "Good luck and have fun!");
+       * instructionText.setEditable(false);
+       * instructionText.setWrapText(true);
+       */
+      Image instructionsImage = new Image("instructions.png");
+      BackgroundSize backgroundSize = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true,
+            false);
+      BackgroundImage backgroundImageObject = new BackgroundImage(instructionsImage, BackgroundRepeat.NO_REPEAT,
+            BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, backgroundSize);
+      Background background = new Background(backgroundImageObject);
+      instructionBox.setBackground(background);
+
+      // when ok button pressed the instructions are closed and starting screen shows
+      Button btnOk = new Button("I Got It");
+      btnOk.setStyle("-fx-background-color: #910707; -fx-text-fill: white;");
+      btnOk.setStyle(btnOk.getStyle() + "-fx-font-size: 15px; -fx-padding: 10px;");
+      btnOk.setTranslateX(14);
+      btnOk.setTranslateY(210);
+      btnOk.setOnAction(new EventHandler<ActionEvent>() {
+         @Override
+         public void handle(ActionEvent event) {
+            instructionStage.close();
+            startingScreen();
+         }
+
+      });
+      instructionBox.getChildren().addAll(btnOk);// instructionLabel, instructionText,
+
+      Scene instructionScene = new Scene(instructionBox, 853, 480);
+      instructionStage.setScene(instructionScene);
+      instructionStage.show();
+   }
+
    public void startingScreen() {
 
       VBox login = new VBox();
-      login.setAlignment(Pos.CENTER);
-      login.setSpacing(10);
-      scene = new Scene(login, 800, 500);
+      // login.setAlignment(Pos.CENTER);
+      login.setSpacing(15);
+
+      // background image
+      Image bcgImage = new Image("loginbcg.png");
+      BackgroundSize backgroundSize = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true,
+            false);
+      BackgroundImage backgroundImageObject = new BackgroundImage(bcgImage, BackgroundRepeat.NO_REPEAT,
+            BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, backgroundSize);
+      Background background = new Background(backgroundImageObject);
+      login.setBackground(background);
+
+      scene = new Scene(login, 853, 480);
+      //
+      lblName = new Label("Write your name to Log In");
+      lblName.setStyle("-fx-text-fill: white;");
+      lblName.setFont(new Font(18));
+      lblName.setTranslateX(340);
+      lblName.setTranslateY(110);
+      //
       tfPlayerName = new TextField();
+      tfPlayerName.setTranslateX(365);
+      tfPlayerName.setTranslateY(110);
+      tfPlayerName.setMaxWidth(150);
+      //
       btnLogin = new Button("Log in");
-      login.getChildren().addAll(tfPlayerName, btnLogin);
+      btnLogin.setTranslateX(413);
+      btnLogin.setTranslateY(110);
+      // btnLogin.setAlignment(Pos.CENTER);
+      login.getChildren().addAll(lblName, tfPlayerName, btnLogin);
       stage.setScene(scene);
       stage.show();
+
       btnLogin.setOnAction(new EventHandler<ActionEvent>() {
 
          @Override
@@ -162,10 +242,13 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
       chatInputField.setTranslateY(430);
 
       sendButton = new Button("Send Message");
+      sendButton.setStyle("-fx-background-color: #910707; -fx-text-fill: white;");
       btnTask1 = new Button("Task 1");
       btnTask2 = new Button("Task 2");
       btnTask3 = new Button("Task 3");
       btnTask4 = new Button("Click to complete the tasks!");
+      btnTask4.setStyle("-fx-background-color: #1c1678; -fx-text-fill: white;");
+      btnTask4.setStyle(btnTask4.getStyle() + "-fx-font-size: 14px; -fx-padding: 7px;");
       sendButton.setTranslateX(330);
       sendButton.setTranslateY(430);
 

@@ -7,16 +7,23 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class AmongUsTasks extends Application {
 
+    // Booleanvariables to keep track of completed tasks
     private boolean wiresTaskCompleted = false;
-    private boolean cardSwipeTaskCompleted = false;
     private boolean alignEnginesTaskCompleted = false;
     private boolean sortSamplesTaskCompleted = false;
+    private boolean memoryPuzzleTaskCompleted = false;
+
+    // A list that keeps track of revealed buttons for the memory puzzle task
+    private List<Button> revealedButtons = new ArrayList<>();
+    // counter for the mached buttons in the memory puzzle
+    private int matchedPairs = 0;
 
     public static void main(String[] args) {
         launch(args);
@@ -24,7 +31,7 @@ public class AmongUsTasks extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // TODO Auto-generated method stub
+        // GUI elements for the main menu
         primaryStage.setTitle("Among Us Tasks");
 
         Label lblTitle = new Label("Among Us - Tasks");
@@ -33,16 +40,16 @@ public class AmongUsTasks extends Application {
         Button btnWires = new Button("Fix Wires");
         btnWires.setOnAction(e -> fixWires(primaryStage));
 
-        Button btnCard = new Button("Swipe Card");
-        btnCard.setOnAction(e -> swipeCard(primaryStage));
-
         Button btnEngines = new Button("Align Engines");
         btnEngines.setOnAction(e -> alignEngines(primaryStage));
 
         Button btnSort = new Button("Sort Samples");
         btnSort.setOnAction(e -> sortSamples(primaryStage));
 
-        VBox root = new VBox(lblTitle, btnWires, btnCard, btnEngines, btnSort);
+        Button btnPuzzle = new Button("Memory Puzzle");
+        btnPuzzle.setOnAction(e -> memoryPuzzle(primaryStage));
+
+        VBox root = new VBox(lblTitle, btnWires, btnEngines, btnSort, btnPuzzle);
         root.setAlignment(Pos.CENTER);
         root.setSpacing(25);
 
@@ -54,6 +61,7 @@ public class AmongUsTasks extends Application {
 
     }
 
+    // Creating the Fix Wires Task
     private void fixWires(Stage primaryStage) {
         Label instructionLabel = new Label("Click the wires to fix them:");
 
@@ -70,22 +78,7 @@ public class AmongUsTasks extends Application {
         primaryStage.setScene(new Scene(root, 400, 300));
     }
 
-    private void swipeCard(Stage primaryStage) {
-        Label instructionLabel = new Label("Click the card to swipe it:");
-
-        ImageView cardImageView = new ImageView(new Image("card.png"));
-        cardImageView.setOnMouseClicked(e -> {
-            cardSwipeTaskCompleted = true;
-            checkTasksCompleted(primaryStage);
-        });
-
-        VBox root = new VBox(instructionLabel, cardImageView);
-        root.setAlignment(Pos.CENTER);
-        root.setSpacing(20);
-
-        primaryStage.setScene(new Scene(root, 400, 300));
-    }
-
+    // Creating the Align Engines task
     private void alignEngines(Stage primaryStage) {
         Label instructionLabel = new Label(
                 "Align the engines by setting the slider to the correct value: (It's not 50 :) )");
@@ -115,6 +108,7 @@ public class AmongUsTasks extends Application {
         primaryStage.setScene(new Scene(root, 400, 300));
     }
 
+    // Create the Sort Samples task
     private void sortSamples(Stage primaryStage) {
         Label instructionLabel = new Label("Sort the samples into the correct categories:");
         Label lblSample = new Label();
@@ -165,9 +159,87 @@ public class AmongUsTasks extends Application {
         primaryStage.setScene(new Scene(root, 400, 300));
     }
 
+    // Creating the Memory Puzzle task
+    private void memoryPuzzle(Stage primaryStage) {
+        Label instructionLabel = new Label("Match the buttons with the same color:");
+
+        GridPane grid = new GridPane();
+        grid.setAlignment(Pos.CENTER);
+        grid.setHgap(15);
+        grid.setVgap(15);
+
+        // Creating a list of colors and shuffeling it
+        List<String> colors = Arrays.asList("red", "red", "blue", "blue", "green", "green", "yellow", "yellow");
+        Collections.shuffle(colors);
+
+        // Create buttons for each color and add them to the grid
+        for (int i = 0; i < 8; i++) {
+            Button button = new Button("?");
+            button.setStyle("-fx-base: lightgrey;");
+            button.setUserData(colors.get(i));
+            button.setMinSize(60, 60);
+            button.setMaxSize(60, 60);
+            //
+            int col = i % 4;
+            int row = i / 4;
+
+            // when the button is clicked
+            button.setOnAction(e -> {
+                button.setStyle("-fx-base: " + button.getUserData() + ";");
+                button.setText("");
+
+                revealedButtons.add(button);
+
+                // Checking if two buttons are clicked and if they have the same color
+                if (revealedButtons.size() == 2) {
+                    if (revealedButtons.get(0).getUserData().equals(revealedButtons.get(1).getUserData())) {
+                        matchedPairs++;
+                        revealedButtons.clear();
+
+                        if (matchedPairs == 4) {
+                            memoryPuzzleTaskCompleted = true;
+                            checkTasksCompleted(primaryStage);
+                        }
+                    } else {
+                        // if the buttons are different colors disable them again
+                        Button firstButton = revealedButtons.get(0);
+                        Button secondButton = revealedButtons.get(1);
+                        firstButton.setDisable(true);
+                        secondButton.setDisable(true);
+                        //
+
+                        new Thread(() -> {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException ex) {
+                                ex.printStackTrace();
+                            }
+                            javafx.application.Platform.runLater(() -> {
+                                firstButton.setStyle("-fx-base: lightgrey;");
+                                firstButton.setText("?");
+                                firstButton.setDisable(false);
+                                secondButton.setStyle("-fx-base: lightgrey;");
+                                secondButton.setText("?");
+                                secondButton.setDisable(false);
+                                revealedButtons.clear();
+                            });
+                        }).start();
+                    }
+                }
+            });
+            grid.add(button, col, row);
+        }
+        VBox root = new VBox(instructionLabel, grid);
+        root.setAlignment(Pos.CENTER);
+        root.setSpacing(20);
+
+        primaryStage.setScene(new Scene(root, 400, 300));
+    }
+
+    // Checking if all the tasks have been completed
     private void checkTasksCompleted(Stage primaryStage) {
-        if (wiresTaskCompleted && cardSwipeTaskCompleted && alignEnginesTaskCompleted && sortSamplesTaskCompleted) {
-            Label completedLabel = new Label("All tasks completed!");
+        if (wiresTaskCompleted && alignEnginesTaskCompleted && sortSamplesTaskCompleted && memoryPuzzleTaskCompleted) {
+            Label completedLabel = new Label("Congratulations! All tasks completed!");
             completedLabel.setStyle("-fx-font-size: 20;");
 
             Button exitButton = new Button("Exit");
