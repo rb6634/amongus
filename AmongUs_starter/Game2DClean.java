@@ -115,7 +115,7 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
 
    }
 
-   // Instruction Window 
+   // Instruction Window
    public void showInstructions() {
       Stage instructionStage = new Stage();
       VBox instructionBox = new VBox();
@@ -399,8 +399,7 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
       ////////
       Game2DClean game = this;
       ////
-      ////
-      ////
+    
 
       Thread serverRecieveThread = new Thread() {
 
@@ -419,9 +418,7 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
                            + otherPlayerLocation.getY());
 
                      //////
-                     /////
-                     /////
-                     ////
+                     
                      try {
 
                         // otherPlayerLocation getIndex() is always zero?????

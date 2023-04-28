@@ -207,6 +207,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
             try {
                 oos = new ObjectOutputStream(this.socket.getOutputStream());
                 ois = new ObjectInputStream(this.socket.getInputStream());
+                oos.writeObject(index);
                 outputstream.add(oos);
                 playerLocation.add(new playerLocation(100, 50, client, this.index));
             } catch (IOException e) {
