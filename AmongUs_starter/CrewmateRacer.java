@@ -1,3 +1,11 @@
+/*
+ * @Instructor: Alan Mutka
+ * @author: Rinor Bugujevci, Uejs Hamja
+ * Project: Among us
+ * @version: 28/04/2023
+ * ISTE: 121.801
+ */
+
 import javafx.geometry.Point2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;

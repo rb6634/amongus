@@ -1,3 +1,11 @@
+/*
+ * @Instructor: Alan Mutka
+ * @author: Rinor Bugujevci, Uejs Hamja
+ * Project: Among us
+ * @version: 28/04/2023
+ * ISTE: 121.801
+ */
+
 import javafx.application.*;
 import javafx.event.*;
 import javafx.scene.*;
@@ -107,7 +115,7 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
 
    }
 
-   // Instruction Window
+   // Instruction Window 
    public void showInstructions() {
       Stage instructionStage = new Stage();
       VBox instructionBox = new VBox();
