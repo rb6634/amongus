@@ -13,7 +13,6 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Scanner;
-
 import javax.swing.plaf.synth.SynthOptionPaneUI;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -42,7 +41,7 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
     @Override
     public void start(Stage _stage) throws Exception {
 
-        ///////////////////////// Setting window properties
+        /////////////////// Setting window properties
         // set the window title
         _stage.setTitle("Remote File Server (AmongUs)");
 
@@ -263,7 +262,6 @@ public class serverGame extends Application implements EventHandler<ActionEvent>
             // i need to send the index to the client
             // when i recreivit i need to update the amongus player
             // who move for that moment to move to the screen for everyone
-            // duhet mi bo uodate ati lojtari qe ja kam marr index
 
         }
 

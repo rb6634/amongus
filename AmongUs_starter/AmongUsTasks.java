@@ -57,8 +57,6 @@ public class AmongUsTasks extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        /////////
-
     }
 
     // Creating the Fix Wires Task

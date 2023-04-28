@@ -101,7 +101,6 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
 
       // showing instruction before starting the game
       showInstructions();
-
       // startingScreen();
 
       // initializeScene();
@@ -115,21 +114,6 @@ public class Game2DClean extends Application implements EventHandler<ActionEvent
       instructionBox.setAlignment(Pos.CENTER);
       instructionBox.setSpacing(10);
       //
-      /*
-       * Label instructionLabel = new Label("How To Play");
-       * instructionLabel.setFont(Font.font("Arlia", FontWeight.BOLD, 20));
-       * instructionLabel.setPadding(new Insets(10, 0, 10, 0));
-       * //
-       * TextArea instructionText = new TextArea("Welcome to the Among Us game!\n\n"
-       * +
-       * "The objective of the game is to complete all the tasks without being killed by the imposters.\n\n"
-       * + "Use the arrow keys to move your character around the map.\n\n"
-       * +
-       * "You can communicate with other players by typing in the chat box and pressing the 'Send Message' button.\n\n"
-       * + "Good luck and have fun!");
-       * instructionText.setEditable(false);
-       * instructionText.setWrapText(true);
-       */
       Image instructionsImage = new Image("instructions.png");
       BackgroundSize backgroundSize = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true,
             false);
